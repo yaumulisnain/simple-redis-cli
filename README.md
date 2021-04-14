@@ -13,7 +13,7 @@
     ```
 * Windows
     ```
-    $ redis-windows-64.exe
+    $ redis-win-64.exe
 
     ```
 
