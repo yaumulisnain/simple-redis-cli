@@ -35,16 +35,19 @@ COMMANDS:
 DATA TYPES:
   STRING escape strings
   TIME RFC3339 format, ex: 2021-04-14T08:09:47Z
+  GEOLOC Lat:Long, ex: -7.8337242:110.3169183
 ```
 ### Example Usage
 * GET
     ```
     $ ./redis-linux-64 GET your:key:in:redis STRING
     $ redis-win-64.exe GET your:key:in:redis TIME
+    $ ./redis-mac-64 GET your:key:in:redis GEOLOC
     ```
 * SET
     ```
     $ ./redis-mac-64 SET your:key:in:redis STRING "Your value"
     $ ./redis-linux-64 SET your:key:in:redis STRING "{\"Your\": \"Value\"}"
     $ redis-win-64.exe SET your:key:in:redis TIME 2021-04-01T00:00:00Z
+    $ ./redis-linux-64 SET your:key:in:redis GEOLOC -7.8337242:110.3169183
     ```

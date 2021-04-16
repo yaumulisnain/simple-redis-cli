@@ -15,6 +15,7 @@ import (
 const (
 	dataTypeString = "STRING"
 	dataTypeTime   = "TIME"
+	dataTypeGeo    = "GEOLOC"
 )
 
 func showHelp() {
@@ -25,6 +26,7 @@ func showHelp() {
 	fmt.Println("DATA TYPES:")
 	fmt.Println("\tSTRING escape strings")
 	fmt.Println("\tTIME RFC3339 format, ex: 2021-04-14T08:09:47Z")
+	fmt.Println("\tGEOLOC Lat:Long, ex: -7.8337242:110.3169183")
 	os.Exit(0)
 }
 
@@ -38,11 +40,23 @@ func validateDataType(d string) {
 	supportedDataType := map[string]bool{
 		dataTypeString: true,
 		dataTypeTime:   true,
+		dataTypeGeo:    true,
 	}
 
 	if !supportedDataType[d] {
 		showHelp()
 	}
+}
+
+func getNSAndMember(key string) (string, string) {
+	s := strings.Split(key, ":")
+	k := s[0]
+
+	for i := 1; i < (len(s) - 1); i++ {
+		k = fmt.Sprintf("%s:%s", k, s[i])
+	}
+
+	return k, s[len(s)-1]
 }
 
 func main() {
@@ -110,6 +124,22 @@ func main() {
 
 			fmt.Printf(`"%s"`, s)
 			fmt.Println()
+		case dataTypeGeo:
+			ns, member := getNSAndMember(redisKey)
+
+			res, err := redisClient.GeoPos(ns, member).Result()
+			if err != nil {
+				log.Fatal(err)
+				os.Exit(1)
+			}
+
+			data := res[0]
+			if data == nil || len(res) == 0 {
+				log.Fatal(redis.Nil)
+				os.Exit(1)
+			}
+
+			fmt.Printf("%f:%f\n", data.Latitude, data.Longitude)
 		}
 
 	case "SET":
@@ -128,6 +158,23 @@ func main() {
 			}
 
 			if err := redisClient.Set(redisKey, t, 0).Err(); err != nil {
+				log.Fatal(err)
+				os.Exit(1)
+			}
+		case dataTypeGeo:
+			ns, member := getNSAndMember(redisKey)
+			v := strings.Split(value, ":")
+
+			lat, _ := strconv.ParseFloat(v[0], 64)
+			lng, _ := strconv.ParseFloat(v[1], 64)
+
+			err := redisClient.GeoAdd(ns, &redis.GeoLocation{
+				Name:      member,
+				Latitude:  lat,
+				Longitude: lng,
+			}).Err()
+
+			if err != nil {
 				log.Fatal(err)
 				os.Exit(1)
 			}
